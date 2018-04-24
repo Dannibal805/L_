@@ -71,7 +71,7 @@ class QuickBot():
     encoderPin = ('P9_39', 'P9_37')
 
     # Encoder counting parameter and variables
-    ticksPerTurn = 16  # Number of ticks on encoder disc
+    ticksPerTurn = 8  # Number of ticks on encoder disc
     encWinSize = 2**5  # Should be power of 2
     minPWMThreshold = [45, 45]  # Threshold on the minimum value to turn wheel
     encTPrev = [0.0, 0.0]
@@ -180,6 +180,28 @@ class QuickBot():
             self.encVelRec = np.zeros((2, self.encRecSize))
             self.encTickStateRec = np.zeros((2, self.encRecSize))
             self.encThresholdRec = np.zeros((2, self.encRecSize))
+
+ def update(self):
+        self.readIRValues()
+        self.readEncoderValues()
+
+    def get_ir(self):
+        """ Getter for IR sensor values """
+        return self.irVal
+
+    def readIRValues(self):
+        prevVal = self.irVal[self.ithIR]
+        ADC_LOCK.acquire()
+        self.irVal[self.ithIR] = ADC.read_raw(config.IRS[self.ithIR])
+        time.sleep(ADCTIME)
+        ADC_LOCK.release()
+
+        if self.irVal[self.ithIR] >= 1100:
+            self.irVal[self.ithIR] = prevVal
+
+        self.ithIR = ((self.ithIR + 1) % 5)
+
+
 
     # Getters and Setters
     def setPWM(self, pwm):
